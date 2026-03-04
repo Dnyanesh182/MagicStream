@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -17,18 +16,28 @@ import (
 )
 
 func main() {
-	// This is the main function
+	// Load .env only in development — production injects env vars directly
+	if os.Getenv("GIN_MODE") != "release" {
+		if err := godotenv.Load(".env"); err != nil {
+			log.Println("Info: No .env file found, using system environment variables")
+		}
+	}
+
+	// Set gin mode from env
+	ginMode := os.Getenv("GIN_MODE")
+	if ginMode != "" {
+		gin.SetMode(ginMode)
+	}
 
 	router := gin.Default()
 
-	router.GET("/hello", func(c *gin.Context) {
-		c.String(200, "Hello, MagicStreamMovies!")
+	// Health check endpoint (required by Render/Fly.io load balancers)
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "healthy",
+			"service": "magicstream-api",
+		})
 	})
-
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Println("Warning: unable to find .env file")
-	}
 
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
 
@@ -72,8 +81,13 @@ func main() {
 	routes.SetupUnProtectedRoutes(router, client)
 	routes.SetupProtectedRoutes(router, client)
 
-	if err := router.Run(":8080"); err != nil {
-		fmt.Println("Failed to start server", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("MagicStream API starting on :%s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 
 }

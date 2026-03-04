@@ -15,7 +15,6 @@ import (
 	"github.com/GavinLonDigital/MagicStream/Server/MagicStreamServer/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/joho/godotenv"
 	"github.com/tmc/langchaingo/llms/openai"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -35,6 +34,7 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch movies."})
+			return
 		}
 		defer cursor.Close(ctx)
 
@@ -196,22 +196,18 @@ func GetReviewRanking(admin_review string, client *mongo.Client, c *gin.Context)
 
 	sentimentDelimited = strings.Trim(sentimentDelimited, ",")
 
-	err = godotenv.Load(".env")
-
-	if err != nil {
-		log.Println("Warning: .env file not found")
-	}
-
 	OpenAiApiKey := os.Getenv("OPENAI_API_KEY")
 
 	if OpenAiApiKey == "" {
-		return "", 0, errors.New("could not read OPENAI_API_KEY")
+		log.Println("Warning: OPENAI_API_KEY not set, falling back to Not_Ranked")
+		return "Not_Ranked", 999, nil
 	}
 
 	llm, err := openai.New(openai.WithToken(OpenAiApiKey))
 
 	if err != nil {
-		return "", 0, err
+		log.Printf("OpenAI client init failed: %v. Falling back to Not_Ranked", err)
+		return "Not_Ranked", 999, nil
 	}
 
 	base_prompt_template := os.Getenv("BASE_PROMPT_TEMPLATE")
@@ -221,7 +217,8 @@ func GetReviewRanking(admin_review string, client *mongo.Client, c *gin.Context)
 	response, err := llm.Call(c, base_prompt+admin_review)
 
 	if err != nil {
-		return "", 0, err
+		log.Printf("OpenAI API call failed: %v. Falling back to Not_Ranked", err)
+		return "Not_Ranked", 999, nil
 	}
 	rankVal := 0
 
@@ -264,6 +261,7 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "User Id not found in context"})
+			return
 		}
 
 		favourite_genres, err := GetUsersFavouriteGenres(userId, client, c)
@@ -272,10 +270,7 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		err = godotenv.Load(".env")
-		if err != nil {
-			log.Println("Warning: .env file not found")
-		}
+
 		var recommendedMovieLimitVal int64 = 5
 
 		recommendedMovieLimitStr := os.Getenv("RECOMMENDED_MOVIE_LIMIT")

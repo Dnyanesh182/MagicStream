@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -22,8 +23,22 @@ type SignedDetails struct {
 	jwt.RegisteredClaims
 }
 
-var SECRET_KEY string = os.Getenv("SECRET_KEY")
-var SECRET_REFRESH_KEY string = os.Getenv("SECRET_REFRESH_KEY")
+// Lazy-load secret keys — ensures they are read AFTER godotenv.Load() in main()
+func getSecretKey() string {
+	key := os.Getenv("SECRET_KEY")
+	if key == "" {
+		log.Fatal("SECRET_KEY environment variable is not set")
+	}
+	return key
+}
+
+func getRefreshSecretKey() string {
+	key := os.Getenv("SECRET_REFRESH_KEY")
+	if key == "" {
+		log.Fatal("SECRET_REFRESH_KEY environment variable is not set")
+	}
+	return key
+}
 
 func GenerateAllTokens(email, firstName, lastName, role, userId string) (string, string, error) {
 	claims := &SignedDetails{
@@ -39,7 +54,7 @@ func GenerateAllTokens(email, firstName, lastName, role, userId string) (string,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(SECRET_KEY))
+	signedToken, err := token.SignedString([]byte(getSecretKey()))
 
 	if err != nil {
 		return "", "", err
@@ -58,7 +73,7 @@ func GenerateAllTokens(email, firstName, lastName, role, userId string) (string,
 		},
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	signedRefreshToken, err := refreshToken.SignedString([]byte(SECRET_REFRESH_KEY))
+	signedRefreshToken, err := refreshToken.SignedString([]byte(getRefreshSecretKey()))
 
 	if err != nil {
 		return "", "", err
@@ -93,15 +108,6 @@ func UpdateAllTokens(userId, token, refreshToken string, client *mongo.Client) (
 }
 
 func GetAccessToken(c *gin.Context) (string, error) {
-	// authHeader := c.Request.Header.Get("Authorization")
-	// if authHeader == "" {
-	// 	return "", errors.New("Authorization header is required")
-	// }
-	// tokenString := authHeader[len("Bearer "):]
-
-	// if tokenString == "" {
-	// 	return "", errors.New("Bearer token is required")
-	// }
 	tokenString, err := c.Cookie("access_token")
 	if err != nil {
 
@@ -116,7 +122,7 @@ func ValidateToken(tokenString string) (*SignedDetails, error) {
 	claims := &SignedDetails{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(SECRET_KEY), nil
+		return []byte(getSecretKey()), nil
 	})
 	if err != nil {
 		return nil, err
@@ -172,7 +178,7 @@ func ValidateRefreshToken(tokenString string) (*SignedDetails, error) {
 	claims := &SignedDetails{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 
-		return []byte(SECRET_REFRESH_KEY), nil
+		return []byte(getRefreshSecretKey()), nil
 	})
 
 	if err != nil {
