@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -282,7 +281,14 @@ func GetRecommendedMovies(client *mongo.Client) gin.HandlerFunc {
 		favourite_genres, err := GetUsersFavouriteGenres(userId, client, c)
 
 		if err != nil {
+			log.Printf("Error fetching favourite genres for user %s: %v", userId, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// If user has no favourite genres, return empty array
+		if len(favourite_genres) == 0 {
+			c.JSON(http.StatusOK, []models.Movie{})
 			return
 		}
 
@@ -356,8 +362,9 @@ func GetUsersFavouriteGenres(userId string, client *mongo.Client, c *gin.Context
 
 	favGenresArray, ok := result["favourite_genres"].(bson.A)
 
-	if !ok {
-		return []string{}, errors.New("unable to retrieve favourite genres for user")
+	if !ok || len(favGenresArray) == 0 {
+		// User has no favourite genres or field is missing/nil
+		return []string{}, nil
 	}
 
 	var genreNames []string
