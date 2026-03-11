@@ -1,3 +1,4 @@
+# MagicStream CI/CD Pipeline
 name: MagicStream CI/CD
 
 on:
