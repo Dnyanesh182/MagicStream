@@ -1,44 +1,118 @@
 # MagicStream 🎬✨
 
-Movie streaming platform with AI recommendation built with modern web technologies (React/Go/gin-gonic/MongoDB) 
+A full-stack, production-grade movie streaming platform with AI-powered recommendations.
 
----
+## Architecture
 
-## About  
+```
+Vercel (CDN) → Render/Fly.io (Go API) → MongoDB Atlas (M0)
+                      ↕
+                  OpenAI (AI Sentiment)
+```
 
-This project is a full-stack simulation of a modern **Movie Streaming Platform**, designed to showcase how different technologies can be combined to deliver a scalable, AI-powered application.  
-
-The system brings together a **React-based frontend** for an engaging user experience, a **Go-based backend** for high-performance API services that runs on the gin (gin-gonic) web framework, and an **AI-powered recommendation engine** to personalize movie suggestions using **LangChainGo** and **OpenAI**.  
-
-It also demonstrates how **MongoDB** can serve as a reliable, scalable database solution for managing media metadata and user preferences.  
-
----
+| Layer | Tech |
+|---|---|
+| **Frontend** | React 19, Vite, React Player, Bootstrap |
+| **Backend** | Go, gin-gonic, JWT (HttpOnly cookies) |
+| **Database** | MongoDB Atlas |
+| **AI** | LangChainGo + OpenAI (sentiment classification) |
+| **CI/CD** | GitHub Actions → Render deploy hook |
 
 ## Features
 
-- Movie Streaming service simulated on the front end using React and React-Player
-- Web API service written using GO and runs on the gin-gonic web framework 
-- AI Recommendation service using LangChainGo, Go and OpenAI
-- Scalable backend storage provided by MongoDB
+- 🎥 Movie streaming simulation with React Player
+- 🔐 JWT authentication with HttpOnly cookie transport
+- 🤖 AI-powered review sentiment analysis (OpenAI)
+- 📊 Personalized movie recommendations based on favourite genres
+- 👑 Admin role with review management
+- 🏥 Health check endpoint for load balancer probes
+- 🐳 Multi-stage Dockerfile (~12MB production image)
+- 🚀 GitHub Actions CI/CD with smoke testing
 
----
+## Quick Start (Local Development)
 
-## Tech Stack
+### Prerequisites
 
-| Frontend / Client | JavaScript / React |
-| Backend / Server | Go / gin-gonic |
-| Storage / Database | MongoDB |
- 
----
+- [Go 1.24+](https://go.dev/dl/)
+- [Node.js 20+](https://nodejs.org/)
+- [MongoDB](https://www.mongodb.com/try/download/community) (local or Atlas)
 
-## Link to Video Tutorial on How to Build the App
-- https://youtu.be/jBf7of9JTV8
+### Backend
 
----
+```bash
+cd Server/MagicStreamServer
+cp .env.example .env
+# Edit .env with your MongoDB URI, JWT secrets, and OpenAI key
+go run main.go
+```
 
-### Installation
+### Frontend
 
-1. Clone the repo  
-   ```bash
-   git clone https://github.com/GavinLonDigital/MagicStream.git
-   cd MagicStream
+```bash
+cd Client/magic-stream-client
+cp .env.example .env
+# Edit .env — set VITE_API_BASE_URL=http://localhost:8080
+npm install
+npm run dev
+```
+
+### Seed Database
+
+```bash
+export MONGODB_URI="your-mongodb-uri"
+export DATABASE_NAME="magicstream"
+bash scripts/seed-mongo.sh
+```
+
+## Deployment
+
+| Service | Platform | Tier |
+|---|---|---|
+| Frontend | Vercel | Free |
+| Backend | Render / Fly.io | Free |
+| Database | MongoDB Atlas | M0 Free |
+| CI/CD | GitHub Actions | Free |
+
+See the full [deployment guide](https://github.com/Dnyanesh182/MagicStream/wiki) for step-by-step instructions.
+
+## API Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `GET` | `/health` | ✗ | Health check |
+| `GET` | `/movies` | ✗ | List all movies |
+| `GET` | `/genres` | ✗ | List all genres |
+| `POST` | `/register` | ✗ | Register user |
+| `POST` | `/login` | ✗ | Login (sets cookies) |
+| `POST` | `/logout` | ✗ | Logout (clears cookies) |
+| `POST` | `/refresh` | ✗ | Refresh JWT tokens |
+| `GET` | `/movie/:imdb_id` | ✓ | Get single movie |
+| `POST` | `/addmovie` | ✓ | Add a movie |
+| `GET` | `/recommendedmovies` | ✓ | AI-powered recommendations |
+| `PATCH` | `/updatereview/:imdb_id` | ✓ (ADMIN) | Update review + AI ranking |
+
+## Environment Variables
+
+### Backend (`Server/MagicStreamServer/.env`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `MONGODB_URI` | ✓ | MongoDB connection string |
+| `DATABASE_NAME` | ✓ | Database name (`magicstream`) |
+| `SECRET_KEY` | ✓ | JWT signing key |
+| `SECRET_REFRESH_KEY` | ✓ | JWT refresh token key |
+| `OPENAI_API_KEY` | ✗ | OpenAI API key (graceful fallback if missing) |
+| `BASE_PROMPT_TEMPLATE` | ✗ | AI prompt template |
+| `ALLOWED_ORIGINS` | ✗ | CORS origins (comma-separated) |
+| `PORT` | ✗ | Server port (default: 8080, auto-set by Render) |
+| `GIN_MODE` | ✗ | `debug` or `release` |
+
+### Frontend (`Client/magic-stream-client/.env`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | ✓ | Backend API URL |
+
+## License
+
+This project is for educational purposes.
