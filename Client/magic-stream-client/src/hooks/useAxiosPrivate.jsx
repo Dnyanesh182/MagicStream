@@ -88,7 +88,7 @@ const useAxiosPrivate = () =>{
         }
         );
 
-    }, [auth]);
+    }, [auth, axiosAuth, setAuth]);
 
     return axiosAuth;
 }
