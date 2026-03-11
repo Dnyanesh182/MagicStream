@@ -82,7 +82,12 @@ jobs:
 
       - name: Health check
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.BACKEND_URL }}/health)
+          BACKEND="${{ secrets.BACKEND_URL }}"
+          if [ -z "$BACKEND" ]; then
+            echo "⚠ BACKEND_URL secret not set — skipping smoke test"
+            exit 0
+          fi
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND/health")
           if [ "$STATUS" != "200" ]; then
             echo "Health check failed with status: $STATUS"
             exit 1
