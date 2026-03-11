@@ -32,7 +32,8 @@ const Review = () => {
 
         fetchMovie();
 
-    }, [axiosPrivate, imdb_id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [imdb_id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useMemo, useCallback} from 'react';
 import axios from 'axios';
 
 import useAuth from './useAuth';
@@ -7,19 +7,19 @@ const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
 const useAxiosPrivate = () =>{
 
-    const axiosAuth = axios.create({
+    // Memoize the axios instance so it doesn't change on every render
+    const axiosAuth = useMemo(() => axios.create({
         baseURL: apiUrl,
         withCredentials: true, // important for HTTP-only cookies
-    });
+    }), []);
 
-
-    const {auth,setAuth} = useAuth();
+    const {auth, setAuth} = useAuth();
 
     const isRefreshing = useRef(false);
     const failedQueue = useRef([]);
 
     // Helper to process queued requests after token refresh
-    const processQueue = (error, response = null) => {
+    const processQueue = useCallback((error, response = null) => {
         failedQueue.current.forEach(prom => {
             if (error) {
             prom.reject(error);
@@ -29,11 +29,11 @@ const useAxiosPrivate = () =>{
         });
 
         failedQueue.current = [];
-    };
+    }, []);
 
      useEffect(() => {
 
-        axiosAuth.interceptors.response.use(
+        const interceptor = axiosAuth.interceptors.response.use(
         response => response,
         async error => {
             console.log('⚠ Interceptor caught error:', error);
@@ -88,7 +88,12 @@ const useAxiosPrivate = () =>{
         }
         );
 
-    }, [auth, axiosAuth, setAuth]);
+        // Cleanup: eject interceptor on unmount or re-run
+        return () => {
+            axiosAuth.interceptors.response.eject(interceptor);
+        };
+
+    }, [axiosAuth, setAuth, processQueue]);
 
     return axiosAuth;
 }

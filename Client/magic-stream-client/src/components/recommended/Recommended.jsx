@@ -25,7 +25,8 @@ const Recommended = () => {
 
         }
         fetchRecommendedMovies();
-    }, [axiosPrivate])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     return (
         <>
