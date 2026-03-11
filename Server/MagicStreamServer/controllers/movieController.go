@@ -203,7 +203,22 @@ func GetReviewRanking(admin_review string, client *mongo.Client, c *gin.Context)
 		return "Not_Ranked", 999, nil
 	}
 
-	llm, err := openai.New(openai.WithToken(OpenAiApiKey))
+	// Build OpenAI client options (supports OpenRouter via custom base URL)
+	opts := []openai.Option{
+		openai.WithToken(OpenAiApiKey),
+	}
+
+	if baseURL := os.Getenv("OPENAI_BASE_URL"); baseURL != "" {
+		opts = append(opts, openai.WithBaseURL(baseURL))
+		log.Printf("Using custom OpenAI base URL: %s", baseURL)
+	}
+
+	if model := os.Getenv("OPENAI_MODEL"); model != "" {
+		opts = append(opts, openai.WithModel(model))
+		log.Printf("Using model: %s", model)
+	}
+
+	llm, err := openai.New(opts...)
 
 	if err != nil {
 		log.Printf("OpenAI client init failed: %v. Falling back to Not_Ranked", err)
@@ -336,6 +351,7 @@ func GetUsersFavouriteGenres(userId string, client *mongo.Client, c *gin.Context
 		if err == mongo.ErrNoDocuments {
 			return []string{}, nil
 		}
+		return []string{}, err
 	}
 
 	favGenresArray, ok := result["favourite_genres"].(bson.A)
