@@ -25,7 +25,7 @@ const Recommended = () => {
 
         }
         fetchRecommendedMovies();
-    }, [])
+    }, [axiosPrivate])
 
     return (
         <>

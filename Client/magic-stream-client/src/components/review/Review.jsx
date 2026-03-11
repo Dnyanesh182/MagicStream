@@ -13,7 +13,7 @@ const Review = () => {
     const [loading, setLoading] = useState(false);
     const revText = useRef();
     const { imdb_id } = useParams();
-    const {auth,setAuth} = useAuth();
+    const {auth} = useAuth();
     const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
@@ -32,7 +32,7 @@ const Review = () => {
 
         fetchMovie();
 
-    }, []);
+    }, [axiosPrivate, imdb_id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
