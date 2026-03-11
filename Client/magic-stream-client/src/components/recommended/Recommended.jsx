@@ -17,8 +17,12 @@ const Recommended = () => {
             try{
                 const response = await axiosPrivate.get('/recommendedmovies');
                 setMovies(response.data);
+                if (!response.data || response.data.length === 0) {
+                    setMessage("No recommendations yet. Select your favourite genres in your profile to get personalized movie recommendations!");
+                }
             } catch (error){
                 console.error("Error fetching recommended movies:", error)
+                setMessage("Unable to load recommendations. Please try again later.");
             } finally {
                 setLoading(false);
             }
