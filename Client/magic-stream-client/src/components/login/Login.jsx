@@ -32,13 +32,8 @@ const Login = () => {
                 setError(response.data.error);
                 return;
             }
-           // console.log(response.data);
             setAuth(response.data);
-            
-           // localStorage.setItem('user', JSON.stringify(response.data));
-            // Handle successful login (e.g., store token, redirect)
            navigate(from, {replace: true});
-           //navigate('/');
 
         } catch (err) {
             console.error(err);
@@ -48,20 +43,23 @@ const Login = () => {
         }
     }; 
     return (
-        <Container className="login-container d-flex align-items-center justify-content-center min-vh-100">
-            <div className="login-card shadow p-4 rounded bg-white" style={{maxWidth: 400, width: '100%'}}>
+        <Container className="d-flex align-items-center justify-content-center min-vh-100" style={{ padding: '2rem 1rem' }}>
+            <div className="auth-card animate-in">
                 <div className="text-center mb-4">
-                    <img src={logo} alt="Logo" width={60} className="mb-2" />
-                    <h2 className="fw-bold">Sign In</h2>
-                    <p className="text-muted">Welcome back! Please login to your account.</p>
+                    <img src={logo} alt="Logo" width={56} style={{
+                        marginBottom: '1rem',
+                        filter: 'drop-shadow(0 0 10px rgba(0,212,255,0.3))',
+                    }} />
+                    <h2 style={{ fontWeight: 700, marginBottom: '0.4rem' }}>Welcome Back</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Sign in to continue streaming</p>
                 </div>
-                {error && <div className="alert alert-danger py-2">{error}</div>}
+                {error && <div className="alert alert-danger py-2" style={{ fontSize: '0.9rem' }}>{error}</div>}
                 <Form onSubmit={handleSubmit}>
                     <Form.Group controlId="formBasicEmail" className="mb-3">
                         <Form.Label>Email address</Form.Label>
                         <Form.Control
                             type="email"
-                            placeholder="Enter email"
+                            placeholder="you@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -69,11 +67,11 @@ const Login = () => {
                         />
                     </Form.Group>
 
-                    <Form.Group controlId="formBasicPassword" className="mb-3">
+                    <Form.Group controlId="formBasicPassword" className="mb-4">
                         <Form.Label>Password</Form.Label>
                         <Form.Control
                             type="password"
-                            placeholder="Password"
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
@@ -81,23 +79,31 @@ const Login = () => {
                     </Form.Group>
 
                     <Button
-                        variant="primary"
                         type="submit"
-                        className="w-100 mb-2"
+                        className="w-100 mb-3"
                         disabled={loading}
-                        style={{fontWeight: 600, letterSpacing: 1}}
+                        style={{
+                            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+                            border: 'none',
+                            fontWeight: 600,
+                            letterSpacing: '0.03em',
+                            padding: '0.7rem',
+                            borderRadius: '10px',
+                            fontSize: '1rem',
+                            boxShadow: '0 4px 20px rgba(0, 212, 255, 0.25)',
+                        }}
                     >
                         {loading ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Logging in...
+                                Signing in...
                             </>
-                        ) : 'Login'}
+                        ) : 'Sign In'}
                     </Button>
                 </Form>
                 <div className="text-center mt-3">
-                    <span className="text-muted">Don't have an account? </span>
-                    <Link to="/register" className="fw-semibold">Register here</Link>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Don&apos;t have an account? </span>
+                    <Link to="/register" style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '0.9rem' }}>Create one</Link>
                 </div>
             </div>
         </Container>

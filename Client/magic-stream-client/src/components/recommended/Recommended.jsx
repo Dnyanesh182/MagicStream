@@ -1,6 +1,6 @@
 import useAxiosPrivate from '../../hooks/useAxiosPrivate';
 import {useEffect, useState} from 'react';
-import Movies from '../movies/Movies';
+import Movie from '../movie/Movie';
 import Spinner from '../spinner/Spinner';
 
 const Recommended = () => {
@@ -33,13 +33,30 @@ const Recommended = () => {
     }, [])
 
     return (
-        <>
+        <div className="container page-container">
+            <div className="section-header animate-in">
+                <h2>⭐ Recommended For You</h2>
+                <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+                    Personalized picks based on your taste
+                </p>
+            </div>
+
             {loading ? (
                 <Spinner/>
-            ) :(
-                <Movies movies = {movies} message ={message} />
+            ) : movies && movies.length > 0 ? (
+                <div className="row stagger-children">
+                    {movies.map((movie) => (
+                        <Movie key={movie._id} movie={movie} />
+                    ))}
+                </div>
+            ) : (
+                <div className="empty-state animate-in">
+                    <div className="empty-state-icon">🎯</div>
+                    <h3>No Recommendations Yet</h3>
+                    <p>{message || "Select your favourite genres when you register to get personalized movie recommendations!"}</p>
+                </div>
             )}
-        </>
+        </div>
     )
 
 }

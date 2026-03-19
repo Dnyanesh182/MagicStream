@@ -1,3 +1,8 @@
-.react-player-container{
+.react-player-container {
     height: 90vh;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin: 1rem;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }

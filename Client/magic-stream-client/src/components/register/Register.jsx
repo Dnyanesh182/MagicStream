@@ -19,19 +19,20 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleGenreChange = (e) => {
-        const options = Array.from(e.target.selectedOptions);
-        setFavouriteGenres(options.map(opt => ({
-            genre_id: Number(opt.value),
-            genre_name: opt.label
-        })));
+    const toggleGenre = (genre) => {
+        setFavouriteGenres(prev => {
+            const exists = prev.find(g => g.genre_id === genre.genre_id);
+            if (exists) {
+                return prev.filter(g => g.genre_id !== genre.genre_id);
+            }
+            return [...prev, { genre_id: genre.genre_id, genre_name: genre.genre_name }];
+        });
     };
+
    const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         const defaultRole ="USER";
-
-        console.log(defaultRole);
 
         if (password !== confirmPassword) {
             setError('Passwords do not match.');
@@ -54,7 +55,6 @@ const Register = () => {
                 setError(response.data.error);
                 return;
             }
-            // Registration successful, redirect to login
             navigate('/login', { replace: true });
         } catch {
             setError('Registration failed. Please try again.');
@@ -79,42 +79,45 @@ const Register = () => {
 
 
     return (
-
-
-       <Container className="login-container d-flex align-items-center justify-content-center min-vh-100">
-        <div className="login-card shadow p-4 rounded bg-white" style={{maxWidth: 400, width: '100%'}}>
+       <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh', padding: '2rem 1rem' }}>
+        <div className="auth-card animate-in" style={{ maxWidth: '480px' }}>
                 <div className="text-center mb-4">
-                     <img src={logo} alt="Logo" width={60} className="mb-2" />
-                    <h2 className="fw-bold">Register</h2>
-                    <p className="text-muted">Create your Magic Movie Stream account.</p>
-                    {error && <div className="alert alert-danger py-2">{error}</div>}                
+                    <img src={logo} alt="Logo" width={56} style={{
+                        marginBottom: '1rem',
+                        filter: 'drop-shadow(0 0 10px rgba(0,212,255,0.3))',
+                    }} />
+                    <h2 style={{ fontWeight: 700, marginBottom: '0.4rem' }}>Create Account</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Join MagicStream for free</p>
                 </div>
+                {error && <div className="alert alert-danger py-2" style={{ fontSize: '0.9rem' }}>{error}</div>}
              <Form onSubmit={handleSubmit}>
-                     <Form.Group className="mb-3">
+                <div className="d-flex gap-3 mb-3">
+                    <Form.Group style={{ flex: 1 }}>
                         <Form.Label>First Name</Form.Label>
                         <Form.Control
                             type="text"
-                            placeholder="Enter first name"
+                            placeholder="John"
                             value={firstName}
                             onChange={e => setFirstName(e.target.value)}
                             required
                         />
                     </Form.Group>
-                     <Form.Group className="mb-3">
+                    <Form.Group style={{ flex: 1 }}>
                         <Form.Label>Last Name</Form.Label>
                         <Form.Control
                             type="text"
-                            placeholder="Enter last name"
+                            placeholder="Doe"
                             value={lastName}
                             onChange={e => setLastName(e.target.value)}
                             required
                         />
                     </Form.Group>
+                </div>
                      <Form.Group className="mb-3">
                         <Form.Label>Email</Form.Label>
                         <Form.Control
                             type="email"
-                            placeholder="Enter email"
+                            placeholder="you@example.com"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             required
@@ -124,7 +127,7 @@ const Register = () => {
                         <Form.Label>Password</Form.Label>
                         <Form.Control
                             type="password"
-                            placeholder="Password"
+                            placeholder="••••••••"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             required
@@ -134,48 +137,83 @@ const Register = () => {
                         <Form.Label>Confirm Password</Form.Label>
                         <Form.Control
                             type="password"
-                            placeholder="Confirm Password"
+                            placeholder="••••••••"
                             value={confirmPassword}
                             onChange={e => setConfirmPassword(e.target.value)}
                             required
                             isInvalid ={!!confirmPassword && password !== confirmPassword}
-
                         />
                         <Form.Control.Feedback type="invalid">
                             Passwords do not match.
                         </Form.Control.Feedback>
                     </Form.Group>
-                    <Form.Group>
-                        <Form.Select
-                            multiple
-                            value={favouriteGenres.map(g => String(g.genre_id))}
-                            onChange={handleGenreChange}
-                        >
-                            {genres.map(genre => (
-                                <option key={genre.genre_id} value={genre.genre_id} label={genre.genre_name}>
-                                    {genre.genre_name}
-                                </option>
-                            ))}
-                        </Form.Select>
-                        <Form.Text className="text-muted">
-                            Hold Ctrl (Windows) or Cmd (Mac) to select multiple genres.
-                        </Form.Text>
+
+                    {/* Genre Pill Selection */}
+                    <Form.Group className="mb-4">
+                        <Form.Label>Favourite Genres</Form.Label>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
+                            Tap to select your favourite genres for personalized recommendations
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {genres.map(genre => {
+                                const isSelected = favouriteGenres.some(g => g.genre_id === genre.genre_id);
+                                return (
+                                    <button
+                                        key={genre.genre_id}
+                                        type="button"
+                                        onClick={() => toggleGenre(genre)}
+                                        style={{
+                                            padding: '0.4rem 0.9rem',
+                                            borderRadius: '9999px',
+                                            fontSize: '0.82rem',
+                                            fontWeight: 500,
+                                            border: isSelected
+                                                ? '1px solid var(--accent)'
+                                                : '1px solid var(--border-glass)',
+                                            background: isSelected
+                                                ? 'rgba(0, 212, 255, 0.12)'
+                                                : 'var(--bg-glass)',
+                                            color: isSelected
+                                                ? 'var(--accent)'
+                                                : 'var(--text-secondary)',
+                                            cursor: 'pointer',
+                                            transition: 'all 150ms ease',
+                                        }}
+                                    >
+                                        {isSelected ? '✓ ' : ''}{genre.genre_name}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </Form.Group>
+
                      <Button
-                        variant="primary"
                         type="submit"
-                        className="w-100 mb-2"
+                        className="w-100 mb-3"
                         disabled={loading}
-                        style={{fontWeight: 600, letterSpacing: 1}}
+                        style={{
+                            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+                            border: 'none',
+                            fontWeight: 600,
+                            letterSpacing: '0.03em',
+                            padding: '0.7rem',
+                            borderRadius: '10px',
+                            fontSize: '1rem',
+                            boxShadow: '0 4px 20px rgba(0, 212, 255, 0.25)',
+                        }}
                     >
                         {loading ? (
                             <>
                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                Registering...
+                                Creating account...
                             </>
-                        ) : 'Register'}
+                        ) : 'Create Account'}
                     </Button>                        
             </Form>
+            <div className="text-center mt-3">
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Already have an account? </span>
+                <Link to="/login" style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '0.9rem' }}>Sign in</Link>
+            </div>
             </div>           
        </Container>
 
