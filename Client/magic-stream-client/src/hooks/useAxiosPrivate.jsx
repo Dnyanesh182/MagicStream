@@ -13,7 +13,7 @@ const useAxiosPrivate = () =>{
         withCredentials: true, // important for HTTP-only cookies
     }), []);
 
-    const {auth, setAuth} = useAuth();
+    const {setAuth} = useAuth();
 
     const isRefreshing = useRef(false);
     const failedQueue = useRef([]);
